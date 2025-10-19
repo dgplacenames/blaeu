@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaeu Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'EB Garamond', serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-size: 18px;
+            background: #f5f5f5;
+            overflow: hidden;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+        }
+
+        header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #555;
+            font-size: 16px;
+            margin-top: 8px;
+        }
+
+        .subtitle a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .subtitle a:hover {
+            text-decoration: underline;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            background: #0066cc;
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            white-space: nowrap;
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .header-btn:hover {
+            background: #0052a3;
+        }
+
+        .stats {
+            color: #666;
+            font-size: 16px;
+            grid-column: 1/-1;
+            margin-top: 5px;
+        }
+
+        .filters {
+            padding: 15px 30px;
+            background: #fafafa;
+            border-bottom: 2px solid #e0e0e0;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 16px;
+            color: #333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+
+        .clear-btn {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            font-size: 16px;
+            white-space: nowrap;
+            height: 42px;
+        }
+
+        .clear-btn:hover {
+            background: #e9ecef;
+            border-color: #ccc;
+        }
+
+        .table-container {
+            position: relative;
+            overflow: auto;
+            height: calc(100vh - 280px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr:hover {
+            background: #dbe9f4;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background: #dbe9f4;
+        }
+
+        .feature-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .feature-link:hover {
+            text-decoration: underline;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e3f2fd;
+            color: #1565c0;
+            font-size: 16px;
+        }
+
+        .empty-cell {
+            color: #999;
+            font-style: italic;
+        }
+
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: #0066cc;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .scroll-top:hover {
+            background: #0052a3;
+        }
+
+        .scroll-top.visible {
+            display: flex;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        .map-view {
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        #viewer {
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: #fff;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
+            width: 280px;
+        }
+
+        .back-btn {
+            background: #0066cc;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+
+        .back-btn:hover {
+            background: #0052a3;
+        }
+
+        .feature-info h2 {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+
+        .feature-info p {
+            margin: 5px 0;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .feature-info a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .feature-info a:hover {
+            text-decoration: underline;
+        }
+
+        .copy-link-btn,
+        .toggle-marker-btn,
+        .nls-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 4px;
+            width: 100%;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+        .copy-link-btn:hover,
+        .toggle-marker-btn:hover,
+        .nls-btn:hover {
+            background: #e9ecef;
+        }
+
+        .copy-link-btn {
+            margin-top: 8px;
+        }
+
+        .copy-link-btn.copied {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="view list-view active" id="listView">
+        <div class="container">
+            <header>
+                <div class="header-left">
+                    <h1>Blaeu Dashboard</h1>
+                    <div class="subtitle">A tool for exploring <a href="https://maps.nls.uk/pont/biographies/bhenery.html" target="_blank">Bob Henery's</a> transcriptions of the Blaeu Atlas of Scotland, 1654.</div>
+                </div>
+                <div class="header-buttons">
+                    <button class="header-btn" id="aboutBtn">About</button>
+                    <a href="dashboard.html" class="header-btn">Statistics</a>
+                </div>
+            </header>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="searchInput">Search</label>
+                    <input type="text" id="searchInput" placeholder="Search by name...">
+                </div>
+                <div class="filter-group">
+                    <label for="mapFilter">Map</label>
+                    <select id="mapFilter">
+                        <option value="">All maps</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="typeFilter">Type</label>
+                    <select id="typeFilter">
+                        <option value="">All types</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="clear-btn" id="clearBtn">Clear</button>
+                </div>
+                <div class="stats" id="stats">Loading...</div>
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Blaeu Name</th>
+                            <th>Type</th>
+                            <th>Modern Name</th>
+                            <th>Map</th>
+                            <th>ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </div>
+        <button class="scroll-top" id="scrollTop">↑</button>
+    </div>
+
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalClose">&times;</span>
+            <h2>About the Blaeu Dashboard</h2>
+            <p>This dashboard lets users browse, search and filter <a href="https://maps.nls.uk/pont/biographies/bhenery.html" target="_blank">Bob Henery</a>'s transcription of the Blaeu Atlas of Scotland (1654), which is hosted by the <a href="https://maps.nls.uk/">NLS</a> as five separate lists:</p>
+            <p style="text-align: center;"><a href="https://maps.nls.uk/atlas/blaeu/gazetteer/browse/a-d.html" target="_blank">A-D</a> | &nbsp; <a href="https://maps.nls.uk/atlas/blaeu/gazetteer/browse/e-h.html" target="_blank">E-H</a> &nbsp; | &nbsp; <a href="https://maps.nls.uk/atlas/blaeu/gazetteer/browse/i-m.html" target="_blank">I-M</a> &nbsp; | &nbsp;  <a href="https://maps.nls.uk/atlas/blaeu/gazetteer/browse/n-q.html" target="_blank">N-Q</a> &nbsp; | &nbsp; <a href="https://maps.nls.uk/atlas/blaeu/gazetteer/browse/r-z.html" target="_blank">R-Z</a></p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>Browse 28,000+ transcribed place names</li>
+                <li>Search by historical or modern name</li>
+                <li>Filter by map or feature type</li>
+                <li>View locations on original atlas maps</li>
+                <li>Explore statistics</li>
+            </ul>
+            <p style="text-align: center; font-size: 14px; margin-top: 20px; color: #666;">
+                Site by <a href="https://github.com/blaeu" target="_blank">Colin Mackenzie</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="view map-view" id="mapView">
+        <div class="map-controls">
+            <button class="back-btn" id="backBtn">← Back to List</button>
+            <div class="feature-info" id="featureInfo"></div>
+        </div>
+        <div id="viewer"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+    <script>
+        let allFeatures = [], mapsData = {}, viewer, filtered = [], visibleStart = 0, visibleEnd = 0, currentMarker = null;
+        const ROWS_BUFFER = 50, ROW_HEIGHT = 45;
+        const els = {
+            listView: document.getElementById('listView'),
+            mapView: document.getElementById('mapView'),
+            tableContainer: document.getElementById('tableContainer'),
+            tbody: document.getElementById('tbody'),
+            stats: document.getElementById('stats'),
+            searchInput: document.getElementById('searchInput'),
+            mapFilter: document.getElementById('mapFilter'),
+            typeFilter: document.getElementById('typeFilter'),
+            featureInfo: document.getElementById('featureInfo'),
+            scrollTop: document.getElementById('scrollTop'),
+            aboutModal: document.getElementById('aboutModal')
+        };
+
+        const normalize = str => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const reconstructUrl = f => `https://maps.nls.uk/view/${f.map.padStart(8, '0')}#zoom=6&lat=${f.lat}&lon=${f.lon}&layers=BT`;
+
+        async function init() {
+            try {
+                const [m, f] = await Promise.all([fetch('maps.json'), fetch('features.json')]);
+                const maps = await m.json();
+                allFeatures = await f.json();
+                maps.forEach(map => mapsData[map.id] = map);
+                populateFilters();
+                filtered = allFeatures;
+
+                const params = new URLSearchParams(window.location.search);
+                const featureParam = params.get('feature');
+
+                if (featureParam) {
+                    showMap(featureParam);
+                } else {
+                    if (params.get('map')) els.mapFilter.value = params.get('map');
+                    if (params.get('type')) els.typeFilter.value = params.get('type');
+                    window.history.replaceState({}, '', window.location.pathname);
+                    filter();
+                    renderVisible();
+                    updateStats();
+                }
+            } catch (e) {
+                console.error(e);
+                els.tbody.innerHTML = '<tr><td colspan="5" class="no-results">Error loading</td></tr>';
+            }
+        }
+
+        function populateFilters() {
+            const mapIds = [...new Set(allFeatures.map(f => f.map))].sort((a, b) => {
+                const na = (mapsData[a]?.short_title || `Map ${a}`).toLowerCase();
+                const nb = (mapsData[b]?.short_title || `Map ${b}`).toLowerCase();
+                return na.localeCompare(nb);
+            });
+            const types = [...new Set(allFeatures.map(f => f.f).filter(Boolean))].sort((a, b) =>
+                a.toLowerCase().localeCompare(b.toLowerCase())
+            );
+
+            mapIds.forEach(id => {
+                const o = document.createElement('option');
+                o.value = id;
+                o.textContent = mapsData[id]?.short_title || `Map ${id}`;
+                els.mapFilter.appendChild(o);
+            });
+
+            types.forEach(t => {
+                const o = document.createElement('option');
+                o.value = t;
+                o.textContent = t;
+                els.typeFilter.appendChild(o);
+            });
+        }
+
+        function renderVisible() {
+            const scrollTop = els.tableContainer.scrollTop;
+            const containerHeight = els.tableContainer.clientHeight;
+            const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - ROWS_BUFFER);
+            const end = Math.min(filtered.length, Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + ROWS_BUFFER);
+
+            if (start === visibleStart && end === visibleEnd) return;
+            visibleStart = start;
+            visibleEnd = end;
+
+            const topSpace = start * ROW_HEIGHT;
+            const bottomSpace = (filtered.length - end) * ROW_HEIGHT;
+
+            const rows = filtered.slice(start, end).map(f => {
+                const mapName = mapsData[f.map]?.short_title || `Map ${f.map}`;
+                const type = f.f ? `<span class="type-badge">${f.f}</span>` : '<span class="empty-cell">—</span>';
+                const modern = f.os || '<span class="empty-cell">—</span>';
+                const name = f.n || 'Unnamed';
+                return `<tr>
+                    <td><a href="#" class="feature-link" data-id="${f.id}">${name}</a></td>
+                    <td>${type}</td>
+                    <td>${modern}</td>
+                    <td>${mapName}</td>
+                    <td style="color:#999">${f.id}</td>
+                </tr>`;
+            }).join('');
+
+            els.tbody.innerHTML = `${topSpace > 0 ? `<tr style="height:${topSpace}px"><td colspan="5"></td></tr>` : ''}${rows}${bottomSpace > 0 ? `<tr style="height:${bottomSpace}px"><td colspan="5"></td></tr>` : ''}`;
+        }
+
+        function filter() {
+            const search = els.searchInput.value.toLowerCase();
+            const map = els.mapFilter.value;
+            const type = els.typeFilter.value;
+            const normalizedSearch = normalize(search);
+
+            filtered = allFeatures.filter(f => {
+                const matchSearch = !search ||
+                    (f.n && (f.n.toLowerCase().includes(search) || normalize(f.n.toLowerCase()).includes(normalizedSearch))) ||
+                    (f.os && (f.os.toLowerCase().includes(search) || normalize(f.os.toLowerCase()).includes(normalizedSearch)));
+                const matchMap = !map || f.map === map;
+                const matchType = !type || f.f === type;
+                return matchSearch && matchMap && matchType;
+            });
+            visibleStart = visibleEnd = 0;
+            els.tableContainer.scrollTop = 0;
+            renderVisible();
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = allFeatures.length;
+            const showing = filtered.length;
+            const maps = Object.keys(mapsData).length;
+            els.stats.textContent = showing === total
+                ? `${total.toLocaleString()} features across ${maps} maps`
+                : `Showing ${showing.toLocaleString()} of ${total.toLocaleString()} features`;
+        }
+
+        let timeout;
+        const debounce = () => { clearTimeout(timeout); timeout = setTimeout(filter, 300) };
+
+        function showMap(id) {
+            const f = allFeatures.find(x => x.id === id);
+            if (!f?.lat || !f?.lon) { alert('No coordinates'); return }
+
+            els.listView.classList.remove('active');
+            els.mapView.classList.add('active');
+            window.location.hash = `map-${id}`;
+
+            const map = mapsData[f.map];
+            if (viewer) viewer.destroy();
+            viewer = OpenSeadragon({
+                id: 'viewer',
+                prefixUrl: 'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/',
+                navigationControlAnchor: OpenSeadragon.ControlAnchor.TOP_RIGHT,
+                tileSources: map.iiif_url,
+                showNavigationControl: true,
+                animationTime: 0.5,
+                minZoomLevel: 0.5,
+                maxZoomLevel: 10
+            });
+
+            viewer.addHandler('open', () => {
+                const w = viewer.world.getItemAt(0).source.dimensions.x;
+                const h = viewer.world.getItemAt(0).source.dimensions.y;
+                const x = parseFloat(f.lon), y = h - parseFloat(f.lat);
+                const vp = viewer.viewport.imageToViewportCoordinates(x, y);
+                const m = document.createElement('div');
+                m.style.cssText = 'width:30px;height:30px;background:rgba(255,0,0,.7);border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(0,0,0,.5);cursor:pointer';
+                currentMarker = { element: m, location: vp };
+                viewer.addOverlay({ element: m, location: vp, placement: OpenSeadragon.Placement.CENTER });
+                viewer.viewport.fitBounds(viewer.viewport.imageToViewportRectangle(x - 500, y - 500, 1000, 1000), true);
+            });
+
+            const mapName = map.short_title || map.full_title || `Map ${f.map}`;
+            const modern = f.os ? `<p><strong>Modern name:</strong> ${f.os}</p>` : '';
+            const typeInfo = f.f ? `<p><strong>Type:</strong> ${f.f}</p>` : '';
+            const shareUrl = `${window.location.origin}${window.location.pathname}?feature=${f.id}`;
+
+            els.featureInfo.innerHTML = `<h2>${f.n || 'Unnamed'}</h2>${typeInfo}<p><strong>Map:</strong> ${mapName}</p>${modern}<p><strong>ID:</strong> ${f.id}</p><p style="font-size:13px;color:#666;margin-top:10px;">Transcription and type analysis by <a href="https://maps.nls.uk/pont/biographies/bhenery.html" target="_blank">Bob Henery</a></p><button class="toggle-marker-btn" onclick="toggleMarker(this)">Hide marker</button><button class="copy-link-btn" onclick="copyFeatureLink('${shareUrl}', this)">Copy link to this location</button><a href="${reconstructUrl(f)}" target="_blank" class="nls-btn">View on NLS →</a>`;
+        }
+
+        function toggleMarker(btn) {
+            if (!currentMarker || !viewer) return;
+            if (currentMarker.element.style.display === 'none') {
+                currentMarker.element.style.display = 'block';
+                btn.textContent = 'Hide marker';
+            } else {
+                currentMarker.element.style.display = 'none';
+                btn.textContent = 'Show marker';
+            }
+        }
+
+        function copyFeatureLink(url, btn) {
+            navigator.clipboard.writeText(url).then(() => {
+                btn.textContent = 'Link copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy link to this location';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        function showList() {
+            els.mapView.classList.remove('active');
+            els.listView.classList.add('active');
+            if (viewer) { viewer.destroy(); viewer = null }
+            window.location.hash = '';
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('feature')) {
+                params.delete('feature');
+                const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+                filter();
+                renderVisible();
+                updateStats();
+            }
+        }
+
+        // Event listeners
+        els.tableContainer.addEventListener('scroll', renderVisible);
+        els.tbody.addEventListener('click', e => {
+            if (e.target.classList.contains('feature-link')) {
+                e.preventDefault();
+                showMap(e.target.dataset.id);
+            }
+        });
+        els.searchInput.addEventListener('input', debounce);
+        els.mapFilter.addEventListener('change', filter);
+        els.typeFilter.addEventListener('change', filter);
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            els.searchInput.value = '';
+            els.mapFilter.value = '';
+            els.typeFilter.value = '';
+            filter();
+        });
+        document.getElementById('backBtn').addEventListener('click', showList);
+
+        els.tableContainer.addEventListener('scroll', e => {
+            els.scrollTop.classList.toggle('visible', e.target.scrollTop > 300);
+        });
+        els.scrollTop.addEventListener('click', () => els.tableContainer.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        let isHoveringTable = false;
+        els.tableContainer.addEventListener('mouseenter', () => isHoveringTable = true);
+        els.tableContainer.addEventListener('mouseleave', () => isHoveringTable = false);
+
+        document.addEventListener('keydown', e => {
+            if (isHoveringTable && els.listView.classList.contains('active')) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    els.tableContainer.scrollBy(0, ROW_HEIGHT * 3);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    els.tableContainer.scrollBy(0, -ROW_HEIGHT * 3);
+                }
+            }
+        });
+
+        document.getElementById('aboutBtn').addEventListener('click', () => els.aboutModal.classList.add('active'));
+        document.getElementById('modalClose').addEventListener('click', () => els.aboutModal.classList.remove('active'));
+        els.aboutModal.addEventListener('click', e => {
+            if (e.target.id === 'aboutModal') els.aboutModal.classList.remove('active');
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
