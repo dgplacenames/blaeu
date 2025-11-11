@@ -491,6 +491,11 @@
                 const params = new URLSearchParams(window.location.search);
                 const featureParam = params.get('feature');
 
+                // Check for hash fragment like #map-495-003
+                const hash = window.location.hash;
+                const hashMatch = hash.match(/^#map-(.+)$/);
+                const featureId = featureParam || (hashMatch ? hashMatch[1] : null);
+
                 if (featureParam) {
                     showMap(featureParam);
                 } else {
@@ -726,3 +731,4 @@
 
 
 </html>
+
