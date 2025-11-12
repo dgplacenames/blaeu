@@ -334,6 +334,47 @@
             text-decoration: underline;
         }
 
+        .feature-header {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            padding: 4px 0;
+        }
+
+        .feature-header:hover h2 {
+            color: #0052a3;
+        }
+
+        .feature-header h2 {
+            margin: 0;
+            font-size: 18px;
+            flex: 1;
+            transition: color 0.2s ease;
+        }
+
+        .feature-header .chevron {
+            font-size: 16px;
+            transition: transform 0.3s ease;
+            color: #666;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .map-controls.collapsed .feature-header .chevron {
+            transform: rotate(-90deg);
+        }
+
+        .feature-details {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .map-controls.collapsed .feature-details {
+            max-height: 0;
+        }
+
         .copy-link-btn,
         .toggle-marker-btn,
         .nls-btn {
@@ -369,6 +410,10 @@
         @media (max-width: 768px) {
             .filters {
                 grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-column: 1;
             }
         }
     </style>
@@ -490,18 +535,20 @@
 
                 const params = new URLSearchParams(window.location.search);
                 const featureParam = params.get('feature');
-
+                
                 // Check for hash fragment like #map-495-003
                 const hash = window.location.hash;
                 const hashMatch = hash.match(/^#map-(.+)$/);
                 const featureId = featureParam || (hashMatch ? hashMatch[1] : null);
 
-                if (featureParam) {
-                    showMap(featureParam);
+                if (featureId) {
+                    // Create initial list view history entry before showing map
+                    window.history.replaceState({view: 'list'}, '', window.location.pathname);
+                    showMap(featureId);
                 } else {
                     if (params.get('map')) els.mapFilter.value = params.get('map');
                     if (params.get('type')) els.typeFilter.value = params.get('type');
-                    window.history.replaceState({}, '', window.location.pathname);
+                    window.history.replaceState({view: 'list'}, '', window.location.pathname);
                     filter();
                     renderVisible();
                     updateStats();
@@ -599,13 +646,16 @@
         let timeout;
         const debounce = () => { clearTimeout(timeout); timeout = setTimeout(filter, 300) };
 
-        function showMap(id) {
+        function showMap(id, fromPopState = false) {
             const f = allFeatures.find(x => x.id === id);
             if (!f?.lat || !f?.lon) { alert('No coordinates'); return }
 
             els.listView.classList.remove('active');
             els.mapView.classList.add('active');
-            window.location.hash = `map-${id}`;
+            
+            if (!fromPopState) {
+                window.history.pushState({view: 'map', featureId: id}, '', `#map-${id}`);
+            }
 
             const map = mapsData[f.map];
             if (viewer) viewer.destroy();
@@ -637,7 +687,22 @@
             const typeInfo = f.f ? `<p><strong>Type:</strong> ${f.f}</p>` : '';
             const shareUrl = `${window.location.origin}${window.location.pathname}?feature=${f.id}`;
 
-            els.featureInfo.innerHTML = `<h2>${f.n || 'Unnamed'}</h2>${typeInfo}<p><strong>Map:</strong> ${mapName}</p>${modern}<p><strong>ID:</strong> ${f.id}</p><p style="font-size:13px;color:#666;margin-top:10px;">Transcription and type analysis by <a href="https://maps.nls.uk/pont/biographies/bhenery.html" target="_blank">Bob Henery</a></p><button class="toggle-marker-btn" onclick="toggleMarker(this)">Hide marker</button><button class="copy-link-btn" onclick="copyFeatureLink('${shareUrl}', this)">Copy link to this location</button><a href="${reconstructUrl(f)}" target="_blank" class="nls-btn">View on NLS →</a>`;
+            els.featureInfo.innerHTML = `
+                <div class="feature-header" onclick="toggleFeatureInfo()">
+                    <h2>${f.n || 'Unnamed'}</h2>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="feature-details">
+                    ${typeInfo}
+                    <p><strong>Map:</strong> ${mapName}</p>
+                    ${modern}
+                    <p><strong>ID:</strong> ${f.id}</p>
+                    <p style="font-size:13px;color:#666;margin-top:10px;">Transcription and type analysis by <a href="https://maps.nls.uk/pont/biographies/bhenery.html" target="_blank">Bob Henery</a></p>
+                    <button class="toggle-marker-btn" onclick="toggleMarker(this)">Hide marker</button>
+                    <button class="copy-link-btn" onclick="copyFeatureLink('${shareUrl}', this)">Copy link to this location</button>
+                    <a href="${reconstructUrl(f)}" target="_blank" class="nls-btn">View on NLS →</a>
+                </div>
+            `;
         }
 
         function toggleMarker(btn) {
@@ -662,17 +727,25 @@
             });
         }
 
-        function showList() {
+        function toggleFeatureInfo() {
+            const controls = document.querySelector('.map-controls');
+            controls.classList.toggle('collapsed');
+        }
+
+        function showList(fromPopState = false) {
             els.mapView.classList.remove('active');
             els.listView.classList.add('active');
             if (viewer) { viewer.destroy(); viewer = null }
-            window.location.hash = '';
+            
+            if (!fromPopState) {
+                window.history.pushState({view: 'list'}, '', window.location.pathname);
+            } else if (window.location.hash) {
+                // If coming from popstate and there's still a hash, replace it
+                window.history.replaceState({view: 'list'}, '', window.location.pathname);
+            }
 
-            const params = new URLSearchParams(window.location.search);
-            if (params.has('feature')) {
-                params.delete('feature');
-                const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
-                window.history.replaceState({}, '', newUrl);
+            // Re-render list (handles edge cases where list wasn't rendered)
+            if (filtered.length === 0 || visibleEnd === 0) {
                 filter();
                 renderVisible();
                 updateStats();
@@ -680,7 +753,10 @@
         }
 
         // Event listeners
-        els.tableContainer.addEventListener('scroll', renderVisible);
+        els.tableContainer.addEventListener('scroll', () => {
+            renderVisible();
+            els.scrollTop.classList.toggle('visible', els.tableContainer.scrollTop > 300);
+        });
         els.tbody.addEventListener('click', e => {
             if (e.target.classList.contains('feature-link')) {
                 e.preventDefault();
@@ -698,9 +774,6 @@
         });
         document.getElementById('backBtn').addEventListener('click', showList);
 
-        els.tableContainer.addEventListener('scroll', e => {
-            els.scrollTop.classList.toggle('visible', e.target.scrollTop > 300);
-        });
         els.scrollTop.addEventListener('click', () => els.tableContainer.scrollTo({ top: 0, behavior: 'smooth' }));
 
         let isHoveringTable = false;
@@ -726,9 +799,19 @@
         });
 
         init();
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (e) => {
+            const hash = window.location.hash;
+            const hashMatch = hash.match(/^#map-(.+)$/);
+            
+            if (hashMatch) {
+                showMap(hashMatch[1], true);
+            } else {
+                showList(true);
+            }
+        });
     </script>
 </body>
 
-
 </html>
-
