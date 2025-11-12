@@ -408,12 +408,44 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            header {
+                flex-direction: column;
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .header-buttons {
+                flex-direction: row;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .header-btn {
+                min-width: auto;
+                flex: 1;
+                padding: 8px 12px;
+            }
+
             .filters {
                 grid-template-columns: 1fr;
+                padding: 15px;
+                align-items: stretch;
             }
 
             .stats {
                 grid-column: 1;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            .clear-btn {
+                height: auto;
             }
         }
     </style>
@@ -813,5 +845,6 @@
         });
     </script>
 </body>
+
 
 </html>
