@@ -146,6 +146,7 @@
             position: relative;
             overflow: auto;
             height: calc(100vh - 280px);
+            min-height: 300px;
         }
 
         table {
@@ -410,6 +411,7 @@
         @media (max-width: 768px) {
             body {
                 padding: 10px;
+                overflow-y: auto;
             }
 
             header {
@@ -446,6 +448,12 @@
 
             .clear-btn {
                 height: auto;
+            }
+
+            .table-container {
+                height: auto;
+                max-height: calc(100vh - 380px);
+                min-height: 200px;
             }
         }
     </style>
